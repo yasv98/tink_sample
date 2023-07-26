@@ -34,5 +34,5 @@ func main() {
 
 	fmt.Printf("Key %s\n,", kh.String())
 	fmt.Printf("Message %s\n", msg)
-	fmt.Printf("Authentication tag: %s\n", base64.StdEncoding.EncodeToString(tag))
+	fmt.Printf("Authentication Tag: %s\n", base64.StdEncoding.EncodeToString(tag))
 }
