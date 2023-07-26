@@ -1,29 +1,38 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
-	"github.com/google/tink/go/aead"
 	"github.com/google/tink/go/keyset"
+	"github.com/google/tink/go/mac"
 	"log"
 )
 
-const (
-	// Change this. AWS KMS, Google Cloud KMS and HashiCorp Vault are supported out of the box.
-	keyURI          = "gcp-kms://projects/tink-examples/locations/global/keyRings/foo/cryptoKeys/bar"
-	credentialsPath = "credentials.json"
-)
-
 func main() {
-	kh, err := keyset.NewHandle(aead.AES128CTRHMACSHA256KeyTemplate())
+	kh, err := keyset.NewHandle(mac.HMACSHA256Tag256KeyTemplate())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	kh1, err := keyset.NewHandle(aead.AES128GCMKeyTemplate())
+	// TODO: save the keyset to a safe location. DO NOT hardcode it in source code.
+	// Consider encrypting it with a remote key in Cloud KMS, AWS KMS or HashiCorp Vault.
+	// See https://github.com/google/tink/blob/master/docs/GOLANG-HOWTO.md#storing-and-loading-existing-keysets.
+	m, err := mac.New(kh)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(kh.String())
-	fmt.Println(kh1.String())
+	msg := []byte("This is the data being encrypted")
+	tag, err := m.ComputeMAC(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if m.VerifyMAC(tag, msg); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Key %s\n,", kh.String())
+	fmt.Printf("Message %s\n", msg)
+	fmt.Printf("Authentication tag: %s\n", base64.StdEncoding.EncodeToString(tag))
 }
